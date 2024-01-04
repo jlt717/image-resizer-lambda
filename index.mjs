@@ -17,9 +17,14 @@ const SUPPORTED_FORMATS = {
 export const handler = async (event, context) => {
   const { eventTime, s3 } = event.Records[0];
   const srcBucket = s3.bucket.name;
-
-  // Object key may have spaces or unicode non-ASCII characters
   const srcKey = decodeURIComponent(s3.object.key.replace(/\+/g, " "));
+
+  // Check if the image is already resized to avoid recursion
+  if (srcKey.startsWith("resized-images/")) {
+    console.log(`Image ${srcBucket}/${srcKey} is already resized. Skipping.`);
+    return;
+  }
+
   const ext = srcKey.replace(/^.*\./, "").toLowerCase();
 
   console.log(`${eventTime} - ${srcBucket}/${srcKey}`);
@@ -41,22 +46,20 @@ export const handler = async (event, context) => {
     // resize image
     const outputBuffer = await sharp(image).resize(THUMBNAIL_WIDTH).toBuffer();
 
-    // store new image in the destination bucket
+    // store new image in the destination bucket with a prefix
+    const destKey = `resized-images/${srcKey}`;
     await S3.send(
       new PutObjectCommand({
         Bucket: DEST_BUCKET,
-        Key: srcKey,
+        Key: destKey,
         Body: outputBuffer,
         ContentType,
       })
     );
-    const message = `Successfully resized ${srcBucket}/${srcKey} and uploaded to ${DEST_BUCKET}/${srcKey}`;
-    console.log(message);
-    return {
-      statusCode: 200,
-      body: message,
-    };
+    
+    console.log(`Successfully resized ${srcBucket}/${srcKey} and uploaded to ${DEST_BUCKET}/${destKey}`);
   } catch (error) {
     console.log(error);
   }
 };
+
