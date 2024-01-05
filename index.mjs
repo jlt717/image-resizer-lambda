@@ -14,13 +14,16 @@ const SUPPORTED_FORMATS = {
   png: true,
 };
 
+const RESIZED_IMAGES_PREFIX = "resized-images/"; // Prefix for resized images
+
+
 export const handler = async (event, context) => {
   const { eventTime, s3 } = event.Records[0];
   const srcBucket = s3.bucket.name;
   const srcKey = decodeURIComponent(s3.object.key.replace(/\+/g, " "));
 
   // Check if the image is already resized to avoid recursion
-  if (srcKey.startsWith("resized-images/")) {
+  if (srcKey.startsWith(RESIZED_IMAGES_PREFIX)) {
     console.log(`Image ${srcBucket}/${srcKey} is already resized. Skipping.`);
     return;
   }
@@ -47,11 +50,11 @@ export const handler = async (event, context) => {
     const outputBuffer = await sharp(image).resize(THUMBNAIL_WIDTH).toBuffer();
 
      // Define the prefix based on whether it's an original or resized image
-     const prefix = srcKey.startsWith("original-images/") ? "original-images/" : "resized-images/";
+     //const prefix = srcKey.startsWith("original-images/") ? "original-images/" : "resized-images/";
 
      // Create the destination key with the appropriate prefix
-     const destKey = `${prefix}${srcKey}`;
-     
+     const destKey = `${RESIZED_IMAGES_PREFIX}${srcKey}`;
+
     // store new image in the destination bucket with a prefix
     //const destKey = `resized-images/${srcKey}`;
     await S3.send(
