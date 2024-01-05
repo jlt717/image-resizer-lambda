@@ -52,7 +52,7 @@ export const handler = async (event, context) => {
     //const prefix = srcKey.startsWith("original-images/") ? "original-images/" : "resized-images/";
 
     // Create the destination key with the appropriate prefix
-    const destKey = `${RESIZED_IMAGES_PREFIX}${srcKey.split("/").pop()}`;
+    const destKey = `${RESIZED_IMAGES_PREFIX}${srcKey.replace(/^original-images\//, '')}`;
 
     // store new image in the destination bucket with a prefix
     //const destKey = `resized-images/${srcKey}`;
