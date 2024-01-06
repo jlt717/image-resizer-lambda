@@ -48,16 +48,14 @@ export const handler = async (event, context) => {
     // resize image
     const outputBuffer = await sharp(image).resize(THUMBNAIL_WIDTH).toBuffer();
 
-    // Define the prefix based on whether it's an original or resized image
-    //const prefix = srcKey.startsWith("original-images/") ? "original-images/" : "resized-images/";
-
+    
     // Create the destination key with the appropriate prefix
     const destKey = `${RESIZED_IMAGES_PREFIX}${srcKey
       .replace(/^.*\/original-images\//, "")
       .replace(/^original-images\//, "")}`;
 
     // store new image in the destination bucket with a prefix
-    //const destKey = `resized-images/${srcKey}`;
+  
     await S3.send(
       new PutObjectCommand({
         Bucket: DEST_BUCKET,
